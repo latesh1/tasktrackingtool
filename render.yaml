@@ -1,0 +1,81 @@
+services:
+  # -------------------------------------------------------
+  # Laravel API — Web Service
+  # -------------------------------------------------------
+  - type: web
+    name: taskflow-api
+    runtime: php
+    region: ohio        # Close to RDS us-east-1
+    plan: free          # Render free tier
+    rootDir: backend
+    buildCommand: >
+      composer install --no-dev --optimize-autoloader --no-interaction &&
+      php artisan config:cache &&
+      php artisan route:cache &&
+      php artisan view:cache &&
+      php artisan migrate --force
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # ---- Application ----
+      - key: APP_NAME
+        value: TaskFlow
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://taskflow-api.onrender.com
+
+      # ---- Frontend / CORS ----
+      - key: FRONTEND_URL
+        value: https://your-frontend.vercel.app
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: your-frontend.vercel.app
+
+      # ---- Database ----
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # ---- Storage (AWS S3) ----
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: us-east-1
+      - key: AWS_BUCKET
+        sync: false
+
+      # ---- Session & Cache ----
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # ---- Logging ----
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+
+      # ---- Mail ----
+      - key: MAIL_MAILER
+        value: log
