@@ -1,45 +1,76 @@
-# General
+# ============================================================
+# TaskFlow — Root .gitignore
+# ============================================================
+
+# IDE / OS
 .DS_Store
 Thumbs.db
-*.log
-
-# IDE & Editors
-.idea/
-.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.idea/
+.vscode/
+*.log
 
-# Backend
+# ============================================================
+# BACKEND (Laravel)
+# ============================================================
+# Secrets — NEVER commit
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Dependencies
 backend/vendor/
 backend/node_modules/
+
+# Public storage symlink
 backend/public/storage
 backend/public/hot
 backend/public/build
-backend/storage/*.key
-backend/storage/pail
-backend/storage/logs/*.log
-backend/storage/framework/cache/*
-!backend/storage/framework/cache/.gitignore
+
+# Laravel runtime caches (generated on deploy)
+backend/bootstrap/cache/*.php
+!backend/bootstrap/cache/.gitignore
+
+# Framework runtime directories
+backend/storage/app/public/*
+!backend/storage/app/public/.gitignore
+backend/storage/framework/cache/data/*
+!backend/storage/framework/cache/data/.gitignore
 backend/storage/framework/sessions/*
 !backend/storage/framework/sessions/.gitignore
 backend/storage/framework/views/*
 !backend/storage/framework/views/.gitignore
-backend/.env
-backend/.env.backup
-backend/.env.production
+backend/storage/logs/*.log
+!backend/storage/logs/.gitignore
+backend/storage/pail
+
+# Key files
+backend/storage/*.key
+
+# Test caches
 backend/.phpunit.result.cache
 backend/.phpunit.cache
-backend/*.sqlite
-backend/*.sqlite-journal
+
+# Local SQLite databases
 backend/database/*.sqlite
 backend/database/*.sqlite-journal
 
-# Frontend
+# ============================================================
+# FRONTEND (React / Vite)
+# ============================================================
+# Secrets — NEVER commit
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Dependencies
 frontend/node_modules/
+
+# Build output
 frontend/dist/
 frontend/dist-ssr/
 frontend/*.local
-frontend/.env

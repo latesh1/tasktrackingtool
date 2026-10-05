@@ -1,204 +1,365 @@
-# TaskFlow - Enterprise Production-Ready Task Tracking Tool
+# TaskFlow — Enterprise Task Tracking Tool
 
-A scalable, production-grade Task Tracking System built with **Laravel 12 (PHP 8.2+)**, **Laravel Sanctum**, **MySQL**, and a modern **React 18+ (Vite, Tailwind CSS, React Router, Axios)** dashboard.
-
-Designed as an autonomous, modular system with clean architecture that can run stand-alone or seamlessly integrate into a larger enterprise Project Management Portal.
+A production-ready, full-stack task tracking system built with **Laravel 12** (PHP 8.2+) and **React 18** (Vite + Tailwind CSS). Supports multi-user environments with role-based access control, real-time in-app notifications, file attachments, Kanban boards, subtasks, comments, and a rich analytics dashboard.
 
 ---
 
-## 🚀 Key Features
+## Live Demo Credentials (Local / Seed Data)
 
-### Backend Architecture (Laravel 12 & Sanctum)
-- **Role-Based Access Control (RBAC)**: Fine-grained permissions for `admin`, `manager`, and `member` roles using Laravel Policies and Gates.
-- **RESTful API Architecture**: Strict REST standards with consistent JSON responses via `ApiResponseTrait`.
-- **Form Request Validation**: Dedicated Form Request classes for every mutating action with comprehensive validation rules.
-- **Eloquent ORM & API Resources**: Consistent serialization, eager-loading to prevent N+1 queries, and clean separation of concerns.
-- **Auditing & Activity Tracking**: Automated logging of state transitions, status changes, assignments, and priority shifts.
-- **Subtask Hierarchy & Auto-Progress**: Tasks calculate subtask completion percentages automatically.
-- **Attachment Management**: Multi-format secure file uploads (PDF, DOCX, PNG, JPG, ZIP) with size validation and download endpoints.
-- **Notification Engine**: In-app notifications triggered on task assignment, status updates, and mentions.
-- **Time Tracking**: Logged time tracking per task with duration, user attribution, and dates.
-- **Automated Test Suite**: Comprehensive Pest / PHPUnit Feature & Unit tests covering authentication, authorization, CRUD, status flows, and subtasks.
+| Role | Email | Password |
+|:---|:---|:---|
+| **Admin** | `admin@example.com` | `password123` |
+| **Manager** | `manager1@example.com` | `password123` |
+| **Manager** | `manager2@example.com` | `password123` |
+| **Member** | `member1@example.com` | `password123` |
+| **Member** | `member2@example.com` | `password123` |
 
-### Frontend Dashboard (React 18+, Vite, Tailwind CSS)
-- **Modern Dashboard UI**: Clean aesthetics, glassmorphism touches, subtle shadows, and status badges.
-- **Authentication Flow**: Sanctum Bearer token persistence, automatic session expiration handling, and protected route wrappers.
-- **Comprehensive Task Board & Table Views**: Filter by status, priority, project, and assignee; search by keyword; sort dynamically.
-- **Interactive Task Details**:
-  - In-place status & priority transitions
-  - Reassignment dropdown with user avatars
-  - Subtask checklist with live progress bar
-  - Activity audit timeline with user stamps
-  - Discussion / Comments section with edit & delete controls
-  - Drag-and-drop file upload zone with file previews & downloads
-- **Project Workspaces**: Project overview cards, task progress counters, and project CRUD modal.
-- **In-App Notifications**: Real-time popover dropdown with unread indicators and "Mark all as read" capability.
-- **Toast Notifications & Confirmation Modals**: Non-blocking feedback and confirmation dialogs for destructive actions.
+> ⚠️ **Never use these credentials in production.** Seed data is for local development only.
 
 ---
 
-## 📂 Project Structure
+## Architecture
 
-```text
+```
+Browser → Vercel (React SPA) → Render (Laravel API) → MySQL + S3 Storage
+```
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full architecture diagram.
+
+---
+
+## Technology Stack
+
+| Layer | Technology |
+|:---|:---|
+| Frontend | React 18, Vite 5, Tailwind CSS, React Router, Axios |
+| Backend | Laravel 12, PHP 8.2+, Laravel Sanctum |
+| Database | MySQL 8 / MariaDB 10.4+ |
+| Auth | Sanctum Bearer Tokens |
+| File Storage | AWS S3 / S3-compatible (Cloudflare R2, Backblaze B2) |
+| Frontend Host | Vercel |
+| Backend Host | Render |
+
+---
+
+## Features
+
+- 🔐 Role-Based Access Control (Admin / Manager / Member)
+- ✅ Full Task CRUD with status, priority, due dates
+- 📋 Kanban Board with drag-and-drop status transitions
+- 🗂️ Projects with task scoping
+- 💬 Comments with author-only edit/delete
+- 📎 File attachments (PDF, Word, Excel, images, ZIP — 10MB max)
+- 🔖 Tags with color coding
+- ✅ Subtasks with auto progress calculation
+- 📊 Dashboard with overdue counts and live metrics
+- 🔔 In-app notifications (assignment, status changes)
+- 🔍 Search, filter, sort, and paginate tasks
+- 📜 Activity audit timeline per task
+- ⏱️ Time tracking per task
+
+---
+
+## Project Structure
+
+```
 taskassignment/
-├── backend/
+├── backend/              # Laravel 12 REST API
 │   ├── app/
-│   │   ├── Http/
-│   │   │   ├── Controllers/Api/   # Auth, Task, Project, Tag, Comment, Attachment, Notification, Dashboard
-│   │   │   ├── Requests/          # StoreTaskRequest, UpdateTaskRequest, LoginRequest, etc.
-│   │   │   └── Resources/         # TaskResource, ProjectResource, UserResource, etc.
-│   │   ├── Models/                # User, Task, Project, Tag, TaskComment, TaskAttachment, TaskActivity, Notification
-│   │   ├── Policies/              # TaskPolicy, ProjectPolicy, CommentPolicy
-│   │   ├── Services/              # TaskService, DashboardService, NotificationService, ActivityService
-│   │   └── Traits/                # ApiResponseTrait
-│   ├── config/                    # cors.php, sanctum.php, database.php
+│   │   ├── Http/Controllers/Api/   # Auth, Task, Project, Comment, Attachment, etc.
+│   │   ├── Http/Requests/          # Validated Form Requests
+│   │   ├── Http/Resources/         # JSON API Resources
+│   │   ├── Models/                 # Eloquent Models
+│   │   ├── Policies/               # Gate Policies (RBAC)
+│   │   ├── Services/               # Business logic layer
+│   │   └── Traits/                 # ApiResponseTrait
 │   ├── database/
-│   │   ├── migrations/            # Complete schema with foreign key cascades & indexes
-│   │   └── seeders/               # DatabaseSeeder with realistic projects, users, tasks, tags, comments
-│   ├── routes/
-│   │   └── api.php                # Complete versioned RESTful endpoints
-│   └── tests/
-│       └── Feature/               # TaskApiTest.php (All 9 tests passing)
+│   │   ├── migrations/             # Full schema migrations
+│   │   └── seeders/                # Demo data seeder
+│   ├── routes/api.php              # All API endpoints
+│   ├── .env.example                # Environment variable template
+│   └── render.yaml                 # Render deployment manifest
 │
-├── frontend/
+├── frontend/             # React 18 + Vite SPA
 │   ├── src/
-│   │   ├── api/                   # axios.js instance with interceptors
-│   │   ├── components/            # TaskTable, TaskCard, TaskForm, ActivityTimeline, CommentSection, etc.
-│   │   ├── context/               # AuthContext.jsx with login, logout, user state
-│   │   ├── hooks/                 # useForm.js, custom utility hooks
-│   │   ├── layouts/               # AppLayout, AuthLayout, Sidebar, Navbar
-│   │   ├── pages/                 # DashboardPage, TasksPage, TaskDetailPage, ProjectsPage, LoginPage, RegisterPage
-│   │   ├── services/              # taskService, projectService, authService, dashboardService, etc.
-│   │   └── utils/                 # helpers.js (formatDate, timeAgo, priorityColor, statusColor)
-│   ├── index.html
-│   ├── tailwind.config.js
-│   └── vite.config.js
-└── README.md
+│   │   ├── api/                    # Axios client (centralized)
+│   │   ├── components/             # UI components
+│   │   ├── context/                # AuthContext, ToastContext
+│   │   ├── hooks/                  # Custom hooks
+│   │   ├── layouts/                # AppLayout, AuthLayout, Sidebar, Navbar
+│   │   ├── pages/                  # Dashboard, Tasks, Projects, Kanban, etc.
+│   │   └── services/               # API service modules
+│   ├── .env.example                # Frontend env template
+│   └── vercel.json                 # Vercel SPA config + security headers
+│
+└── docs/
+    └── DEPLOYMENT.md               # Full deployment architecture guide
 ```
 
 ---
 
-## 👥 Seed Credentials & Roles
+## Local Development
 
-| Name | Email | Password | Role | Capabilities |
-| :--- | :--- | :--- | :--- | :--- |
-| **Sarah Admin** | `admin@example.com` | `password123` | **Admin** | Full system access: delete/edit any task, project, user |
-| **Alex Rivera** | `manager1@example.com` | `password123` | **Manager** | Create projects, assign tasks, manage team tasks |
-| **Marcus Chen** | `manager2@example.com` | `password123` | **Manager** | Manage assigned projects and oversee team velocity |
-| **Emily Watson** | `member1@example.com` | `password123` | **Member** | Update assigned task status, post comments, log subtasks |
-| **David Kim** | `member2@example.com` | `password123` | **Member** | View tasks, change status of assigned tasks |
+### Prerequisites
 
----
+- PHP 8.2+ with extensions: `pdo_mysql`, `mbstring`, `openssl`, `fileinfo`
+- Composer 2.x
+- Node.js 18+ and npm
+- MySQL 8 / MariaDB 10.4+ (e.g., XAMPP)
 
-## 🛠️ Getting Started
+### 1. Clone the Repository
 
-### 1. Prerequisites
-- **PHP 8.2+** with extensions: `pdo_mysql`, `fileinfo`, `mbstring`, `openssl`
-- **Composer 2.x**
-- **Node.js 18+** & **npm**
-- **MySQL / MariaDB** (e.g., via XAMPP or native service)
+```bash
+git clone https://github.com/latesh1/tasktrackingtool.git
+cd tasktrackingtool
+```
 
 ### 2. Backend Setup
+
 ```bash
-# Navigate to backend directory
 cd backend
-
-# Copy environment template if needed
 cp .env.example .env
-
-# Generate application key
+# Edit .env — set DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 php artisan key:generate
-
-# Run database migrations and seed data
 php artisan migrate:fresh --seed
-
-# Create storage symlink for uploaded files
 php artisan storage:link
-
-# Start the Laravel development server
 php artisan serve
 ```
-Backend will be live at `http://localhost:8000`.
+
+Backend runs at: `http://localhost:8000`
 
 ### 3. Frontend Setup
+
 ```bash
-# In a new terminal, navigate to frontend directory
 cd frontend
-
-# Install dependencies (if not already installed)
+cp .env.example .env
+# Edit .env — set VITE_API_URL=http://localhost:8000/api
 npm install
-
-# Start Vite development server
 npm run dev
 ```
-Frontend will be live at `http://localhost:5173`.
+
+Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 🧪 Testing
+## Environment Variables
 
-### Backend Automated Tests
-Run the PHPUnit/Pest test suite to verify authorization rules, endpoints, and task logic:
+### Backend (`backend/.env`)
+
+| Variable | Description | Example |
+|:---|:---|:---|
+| `APP_KEY` | Laravel encryption key (auto-generate with `php artisan key:generate`) | `base64:abc...` |
+| `APP_URL` | Backend public URL | `https://taskflow-api.onrender.com` |
+| `APP_DEBUG` | Must be `false` in production | `false` |
+| `FRONTEND_URL` | React app URL (used for CORS) | `https://yourapp.vercel.app` |
+| `SANCTUM_STATEFUL_DOMAINS` | Domain only (no protocol) for Sanctum | `yourapp.vercel.app` |
+| `DB_HOST` | MySQL host | `your-db.render.com` |
+| `DB_DATABASE` | Database name | `taskflow_prod` |
+| `DB_USERNAME` | Database user | `taskflow_user` |
+| `DB_PASSWORD` | Database password | *(set in dashboard)* |
+| `FILESYSTEM_DISK` | Storage driver | `s3` |
+| `AWS_ACCESS_KEY_ID` | S3 key | *(set in dashboard)* |
+| `AWS_SECRET_ACCESS_KEY` | S3 secret | *(set in dashboard)* |
+| `AWS_BUCKET` | S3 bucket name | `taskflow-attachments` |
+| `AWS_DEFAULT_REGION` | S3 region | `us-east-1` |
+| `LOG_CHANNEL` | Log channel (use `stderr` on Render) | `stderr` |
+| `LOG_LEVEL` | Minimum log level | `error` |
+
+### Frontend (`frontend/.env`)
+
+| Variable | Description | Example |
+|:---|:---|:---|
+| `VITE_API_URL` | Full API base URL **including /api** | `https://taskflow-api.onrender.com/api` |
+
+> ⚠️ All `VITE_*` variables are **embedded in the browser bundle**. Never store secrets here.
+
+---
+
+## Production Deployment
+
+### 1. MySQL Database
+
+Use one of:
+- [Render PostgreSQL/MySQL](https://render.com/docs/databases) (simplest — same platform)
+- [Railway](https://railway.app)
+- [PlanetScale](https://planetscale.com) (serverless MySQL)
+
+Create a database and note the host, port, name, user, and password.
+
+### 2. File Storage (S3)
+
+Use one of:
+- [AWS S3](https://aws.amazon.com/s3/)
+- [Cloudflare R2](https://cloudflare.com/products/r2/) (zero egress fees)
+- [Backblaze B2](https://www.backblaze.com/b2/)
+
+Create a bucket, generate an access key, and note the credentials.
+
+For R2/Backblaze, also set `AWS_ENDPOINT` to the provider's S3-compatible endpoint.
+
+### 3. Backend on Render
+
+1. Go to [render.com](https://render.com) → **New Web Service**
+2. Connect your GitHub repo: `latesh1/tasktrackingtool`
+3. **Root Directory**: `backend`
+4. **Build Command**:
+   ```bash
+   composer install --no-dev --optimize-autoloader --no-interaction && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force
+   ```
+5. **Start Command**:
+   ```bash
+   php artisan serve --host=0.0.0.0 --port=$PORT
+   ```
+6. **Health Check Path**: `/api/health`
+7. Add **Environment Variables** in the Render dashboard:
+
+| Key | Value |
+|:---|:---|
+| `APP_KEY` | *(auto-generate or run `php artisan key:generate --show`)* |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+| `APP_URL` | `https://your-service.onrender.com` |
+| `FRONTEND_URL` | `https://your-frontend.vercel.app` |
+| `SANCTUM_STATEFUL_DOMAINS` | `your-frontend.vercel.app` |
+| `DB_HOST` | *(from your MySQL provider)* |
+| `DB_PORT` | `3306` |
+| `DB_DATABASE` | *(your DB name)* |
+| `DB_USERNAME` | *(your DB user)* |
+| `DB_PASSWORD` | *(your DB password)* |
+| `FILESYSTEM_DISK` | `s3` |
+| `AWS_ACCESS_KEY_ID` | *(your S3 key)* |
+| `AWS_SECRET_ACCESS_KEY` | *(your S3 secret)* |
+| `AWS_DEFAULT_REGION` | `us-east-1` |
+| `AWS_BUCKET` | *(your bucket name)* |
+| `LOG_CHANNEL` | `stderr` |
+| `LOG_LEVEL` | `error` |
+| `SESSION_DRIVER` | `database` |
+| `CACHE_STORE` | `database` |
+
+### 4. Frontend on Vercel
+
+1. Go to [vercel.com](https://vercel.com) → **New Project**
+2. Import `latesh1/tasktrackingtool`
+3. **Framework Preset**: Vite
+4. **Root Directory**: `frontend`
+5. **Build Command**: `npm run build`
+6. **Output Directory**: `dist`
+7. Add **Environment Variable** in Vercel Settings → Environment Variables:
+
+| Key | Value |
+|:---|:---|
+| `VITE_API_URL` | `https://your-service.onrender.com/api` |
+
+8. Deploy. Vercel auto-configures SPA routing from `vercel.json`.
+
+---
+
+## API Endpoints
+
+### Authentication
+```
+POST   /api/register              Register new user
+POST   /api/login                 Login (returns Bearer token)
+POST   /api/logout                Logout (requires auth)
+GET    /api/user                  Get current user (requires auth)
+GET    /api/users                 List users for assignments (requires auth)
+```
+
+### Tasks
+```
+GET    /api/tasks                 List tasks (paginated, filterable)
+POST   /api/tasks                 Create task
+GET    /api/tasks/{id}            Get task with full details
+PUT    /api/tasks/{id}            Update task
+DELETE /api/tasks/{id}            Delete task
+PATCH  /api/tasks/{id}/status     Update status only
+POST   /api/tasks/{id}/assign     Assign/reassign task
+POST   /api/tasks/bulk            Bulk status update / delete
+GET    /api/tasks/overdue         Overdue tasks list
+GET    /api/tasks/{id}/subtasks   List subtasks with progress
+POST   /api/tasks/{id}/subtasks   Add subtask
+GET    /api/tasks/{id}/activities Activity audit log
+```
+
+### Comments
+```
+GET    /api/tasks/{id}/comments   List comments
+POST   /api/tasks/{id}/comments   Add comment
+PUT    /api/comments/{id}         Edit comment (author only)
+DELETE /api/comments/{id}         Delete comment (author or manager)
+```
+
+### Attachments
+```
+GET    /api/tasks/{id}/attachments          List attachments
+POST   /api/tasks/{id}/attachments          Upload file (max 10MB)
+GET    /api/attachments/{id}/download       Download file
+DELETE /api/attachments/{id}                Delete attachment
+```
+
+### Projects
+```
+GET    /api/projects              List projects
+POST   /api/projects              Create project
+GET    /api/projects/{id}         Get project
+PUT    /api/projects/{id}         Update project
+DELETE /api/projects/{id}         Delete project
+GET    /api/projects/{id}/tasks   Project-scoped tasks
+```
+
+### Tags, Notifications, Dashboard
+```
+GET|POST /api/tags                List or create tags
+GET    /api/dashboard             Dashboard metrics (counts, overdue, recent)
+GET    /api/notifications         User notifications
+PATCH  /api/notifications/read-all              Mark all read
+PATCH  /api/notifications/{id}/read             Mark one read
+GET    /api/health                Health check (no auth required)
+```
+
+### Rate Limits
+| Endpoint group | Limit |
+|:---|:---|
+| `/api/login`, `/api/register` | 10 requests / minute / IP |
+| All other API endpoints | 120 requests / minute / user or IP |
+
+---
+
+## Running Tests
+
 ```bash
 cd backend
 php artisan test
-```
-
-### Frontend Build Validation
-Verify that all components and assets compile cleanly for production:
-```bash
-cd frontend
-npm run build
+# Expected: 9 tests, 42 assertions, all passing
 ```
 
 ---
 
-## 🔌 API Endpoints Summary
+## Production Checklist
 
-### Authentication (`/api`)
-- `POST /register` - Register a new user
-- `POST /login` - Authenticate and obtain Sanctum Bearer token
-- `POST /logout` - Revoke current access token
-- `GET /user` - Get current authenticated user profile
-- `GET /users` - List users for task assignment
-
-### Dashboard (`/api/dashboard`)
-- `GET /dashboard` - Aggregated status counts, overdue metrics, recently updated tasks
-
-### Tasks (`/api/tasks`)
-- `GET /tasks` - List tasks with pagination, filtering (`status`, `priority`, `project_id`, `assigned_to`, `search`)
-- `POST /tasks` - Create a new task (Manager / Admin or Project member)
-- `GET /tasks/{task}` - Retrieve single task with subtasks, tags, attachments, comments
-- `PUT /tasks/{task}` - Update task details
-- `DELETE /tasks/{task}` - Delete task (Admin / Manager only)
-- `PATCH /tasks/{task}/status` - Quick status transition (`todo`, `in_progress`, `blocked`, `done`)
-- `POST /tasks/{task}/assign` - Reassign task to a team member
-- `POST /tasks/bulk` - Batch status update or deletion
-- `GET /tasks/{task}/subtasks` - List subtasks
-- `POST /tasks/{task}/subtasks` - Add a subtask
-- `GET /tasks/{task}/activities` - Retrieve activity audit log
-
-### Comments & Attachments
-- `GET /tasks/{task}/comments` & `POST /tasks/{task}/comments`
-- `PUT /comments/{comment}` & `DELETE /comments/{comment}`
-- `POST /tasks/{task}/attachments` - Multipart file upload
-- `GET /attachments/{attachment}/download` - Stream / download file
-- `DELETE /attachments/{attachment}` - Remove attachment
-
-### Projects & Tags
-- `GET /projects`, `POST /projects`, `GET /projects/{project}`, `PUT /projects/{project}`
-- `GET /projects/{project}/tasks` - Project-scoped task list
-- `GET /tags`, `POST /tags`
-
-### Notifications
-- `GET /notifications` - List user notifications
-- `PATCH /notifications/{id}/read` - Mark single notification as read
-- `PATCH /notifications/read-all` - Mark all notifications as read
+- [ ] `APP_DEBUG=false` in production
+- [ ] `APP_KEY` set (never empty)
+- [ ] Database credentials set in dashboard (not committed)
+- [ ] S3 credentials set in dashboard (not committed)
+- [ ] `FRONTEND_URL` matches actual Vercel URL
+- [ ] `VITE_API_URL` matches actual Render URL
+- [ ] `php artisan migrate --force` run (NOT migrate:fresh)
+- [ ] Health check endpoint `/api/health` responds 200
+- [ ] File upload tested with real S3 bucket
+- [ ] Login works from production frontend domain
+- [ ] All roles (admin/manager/member) tested
+- [ ] CORS: only the Vercel domain is allowed
 
 ---
 
-## 🏢 Integration with Larger Project Management Portals
-1. **Modular Domain Models**: Tasks, Projects, and Activities are bounded contexts.
-2. **Decoupled API Contract**: Resources (`TaskResource`, `ProjectResource`) format responses independently from database tables.
-3. **Pluggable Auth**: Supports standard Sanctum tokens or OAuth2/SSO with minimal config change in `config/auth.php`.
-4. **Independent Frontend Modules**: Pages and components are structured to be embedded into micro-frontends or imported as a dedicated route module.
+## Security Notes
+
+- Passwords hashed with bcrypt (12 rounds)
+- Bearer tokens scoped per user, revoked on logout
+- All resource access checked with Laravel Policies
+- File uploads validated by MIME type + extension + size
+- No stack traces exposed to API consumers in production
+- CORS allows only configured `FRONTEND_URL`
+- Rate limiting on auth endpoints prevents brute-force
+- Trusted proxies configured for Render load balancer
+- No secrets in `VITE_*` variables (browser-visible)

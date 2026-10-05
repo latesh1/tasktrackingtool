@@ -1,0 +1,83 @@
+services:
+  # -------------------------------------------------------
+  # Laravel API — Web Service
+  # -------------------------------------------------------
+  - type: web
+    name: taskflow-api
+    runtime: php
+    region: singapore   # Change to match your user base: oregon, frankfurt, singapore, ohio
+    plan: starter       # Free tier; upgrade to starter-plus for production traffic
+    rootDir: backend
+    buildCommand: >
+      composer install --no-dev --optimize-autoloader --no-interaction &&
+      php artisan config:cache &&
+      php artisan route:cache &&
+      php artisan view:cache &&
+      php artisan migrate --force
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # ---- Application ----
+      - key: APP_NAME
+        value: TaskFlow
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true          # Render auto-generates a secure key on first deploy
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://taskflow-api.onrender.com   # Replace with your actual Render URL
+
+      # ---- Frontend / CORS ----
+      - key: FRONTEND_URL
+        value: https://your-frontend.vercel.app    # Replace with your actual Vercel URL
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: your-frontend.vercel.app            # Domain only, no protocol
+
+      # ---- Database — set these manually in Render dashboard ----
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false         # Set in Render dashboard
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false         # Set in Render dashboard
+      - key: DB_USERNAME
+        sync: false         # Set in Render dashboard
+      - key: DB_PASSWORD
+        sync: false         # Set in Render dashboard
+
+      # ---- Storage (S3-compatible) — set in Render dashboard ----
+      - key: FILESYSTEM_DISK
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false         # Set in Render dashboard
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false         # Set in Render dashboard
+      - key: AWS_DEFAULT_REGION
+        value: us-east-1
+      - key: AWS_BUCKET
+        sync: false         # Set in Render dashboard
+      # - key: AWS_ENDPOINT
+      #   sync: false       # Only for S3-compatible APIs (Cloudflare R2, Backblaze B2)
+
+      # ---- Session & Cache ----
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+
+      # ---- Logging (stderr → Render log stream) ----
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+
+      # ---- Mail (optional) ----
+      - key: MAIL_MAILER
+        value: log     # Change to smtp once you configure a mail provider

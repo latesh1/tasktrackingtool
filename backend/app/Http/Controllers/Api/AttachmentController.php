@@ -10,8 +10,11 @@ use App\Models\TaskAttachment;
 use App\Services\TaskService;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AttachmentController extends Controller
@@ -40,7 +43,8 @@ class AttachmentController extends Controller
         $fileSize = $file->getSize();
         $fileType = $file->getClientMimeType() ?: $file->getClientOriginalExtension();
 
-        $path = $file->store("attachments/{$task->id}", 'local');
+        $disk = config('filesystems.default', 'local');
+        $path = $file->store("attachments/{$task->id}", $disk);
 
         $attachment = TaskAttachment::create([
             'task_id' => $task->id,
@@ -58,15 +62,25 @@ class AttachmentController extends Controller
         return $this->successResponse(new AttachmentResource($attachment->load('user')), 'Attachment uploaded successfully', JsonResponse::HTTP_CREATED);
     }
 
-    public function download(TaskAttachment $attachment): StreamedResponse|JsonResponse
+    public function download(Request $request, TaskAttachment $attachment): Response
     {
-        Gate::authorize('view', $attachment->task);
-
-        if (!Storage::disk('local')->exists($attachment->file_path)) {
-            return $this->errorResponse('File not found on server.', null, JsonResponse::HTTP_NOT_FOUND);
+        // Support direct browser downloads via ?token= query parameter if not in headers
+        if (!$request->user() && $request->has('token')) {
+            $accessToken = PersonalAccessToken::findToken($request->query('token'));
+            if ($accessToken && (!$accessToken->expires_at || $accessToken->expires_at->isFuture())) {
+                auth()->setUser($accessToken->tokenable);
+            }
         }
 
-        return Storage::disk('local')->download($attachment->file_path, $attachment->file_name);
+        Gate::authorize('view', $attachment->task);
+
+        $disk = config('filesystems.default', 'local');
+
+        if (!Storage::disk($disk)->exists($attachment->file_path)) {
+            return $this->errorResponse('File not found on storage server.', null, JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        return Storage::disk($disk)->download($attachment->file_path, $attachment->file_name);
     }
 
     public function destroy(TaskAttachment $attachment): JsonResponse
@@ -75,9 +89,10 @@ class AttachmentController extends Controller
 
         $task = $attachment->task;
         $fileName = $attachment->file_name;
+        $disk = config('filesystems.default', 'local');
 
-        if (Storage::disk('local')->exists($attachment->file_path)) {
-            Storage::disk('local')->delete($attachment->file_path);
+        if (Storage::disk($disk)->exists($attachment->file_path)) {
+            Storage::disk($disk)->delete($attachment->file_path);
         }
 
         $attachment->delete();
@@ -89,3 +104,4 @@ class AttachmentController extends Controller
         return $this->successResponse(null, 'Attachment deleted successfully');
     }
 }
+
