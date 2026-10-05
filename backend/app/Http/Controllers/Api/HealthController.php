@@ -18,12 +18,12 @@ class HealthController extends Controller
     public function index(): JsonResponse
     {
         $dbOk = false;
+        $dbError = null;
         try {
             DB::connection()->getPdo();
             $dbOk = true;
-        } catch (\Throwable) {
-            // DB connectivity failure — still return 200 so the app itself is alive,
-            // but report the degraded state so monitoring can alert.
+        } catch (\Throwable $e) {
+            $dbError = $e->getMessage();
         }
 
         return response()->json([
@@ -32,6 +32,7 @@ class HealthController extends Controller
             'app'       => config('app.name'),
             'env'       => app()->environment(),
             'database'  => $dbOk ? 'connected' : 'unavailable',
+            'database_error' => $dbError,
         ], $dbOk ? 200 : 503);
     }
 }
